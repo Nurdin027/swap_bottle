@@ -1,0 +1,185 @@
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="_app/static/assets/plugins/bootstrap/css/bootstrap.min.css">
+    <title>Swap Bottle</title>
+    <style>
+        #hasil {
+            display: none;
+        }
+
+        #acak {
+            margin-top: 5rem;
+        }
+
+        #acak .col, #hasil .col {
+            width: 10rem;
+            text-align: center;
+            align-content: center;
+        }
+
+        #hasil .col {
+            height: 2rem;
+        }
+
+        #hasil .col.warna-1 {
+            background: #e81416;
+        }
+
+        #hasil .col.warna-2 {
+            background: #ffa500;
+        }
+
+        #hasil .col.warna-3 {
+            background: #487de7;
+        }
+
+        #hasil .col.warna-4 {
+            background: #79c314;
+        }
+
+        #hasil .col.warna-5 {
+            background: #4b369d;
+        }
+
+        #hasil .col.warna-6 {
+            background: #70369d;
+        }
+
+        .sortable-chosen {
+            border: 0 !important;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row mt-4">
+        <div class="col">
+            <div class="jumbotron">
+                <div class="row">
+                    <div class="col">
+                        <h3>Match: <span id="match"></span></h3>
+                    </div>
+                    <div class="col text-right">
+                        <h3>Time: <span id="time"></span></h3>
+                        <h3>Move: <span id="move"></span></h3>
+                    </div>
+                </div>
+                <div class="row row-cols-6" id="acak">
+                </div>
+                <div id="hasil"></div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center">
+        <button class="btn-new-game btn btn-success btn-lg" onclick="location.reload();">New Game</button>
+    </div>
+</div>
+<script src="_app/static/assets/plugins/jquery/jquery.min.js"></script>
+<script src="_app/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    let angka = [1, 2, 3, 4, 5, 6],
+        jawaban = [],
+        soal = [],
+        isi = "",
+        btn_new_game = $(".btn-new-game")
+    btn_new_game.hide();
+    soal = shuffleArray(angka)
+    $.each(soal, function (i, v) {
+        isi += `
+            <div class="col border" data-index="${v}">
+                <img src="_app/static/assets/images/bottle_${v}.png" alt="bottle" class="img-fluid">
+            </div>
+        `
+    })
+    $("#acak").html(isi);
+    jawaban = shuffleArray(soal)
+
+    let match = 0, move = 0,
+        start, end,
+        sortable, runtime
+    sort();
+
+    sortable = new Sortable(acak, {
+        swapThreshold: 1,
+        animation: 150,
+        swap: true,
+        onSort: function () {
+            if (!start) {
+                start = new Date();
+            }
+            move++;
+            sort();
+        },
+    });
+
+    function sort() {
+        pil = []
+        $("#acak .col").each(function () {
+            pil.push($(this).data("index"))
+        });
+        check(pil)
+    }
+
+    function lihatHasil() {
+        let isi = `<div class="row row-cols-6">`;
+        $.each(jawaban, function (i, v) {
+            isi += `
+                <div class="col border warna-${v}"></div>
+            `;
+        });
+        isi += `</div>`;
+        $("#hasil").html(isi);
+        btn_new_game.show();
+    }
+
+    function check(pil) {
+        match = 0;
+        $.each(jawaban, function (i, j) {
+            if (pil[i] === j) {
+                match++
+            }
+        });
+        $("#match").text(match);
+        $("#move").text(move);
+        if (match === 6) {
+            end = new Date();
+            lihatHasil()
+            $("#hasil").show();
+            if (runtime) {
+                clearInterval(runtime)
+            }
+            if (sortable) {
+                sortable.option("disabled", true);
+            }
+        }
+    }
+
+    runtime = setInterval(function () {
+        let mstime = new Date() - start,
+            stime = mstime / 1000,
+            time = stime,
+            strtime
+        if (isNaN(time)) {
+            strtime = 0
+        } else if (time > 3600) {
+            strtime = Math.ceil(time / 60 / 60) + " hour(s)"
+        } else {
+            strtime = Math.ceil(time)
+        }
+        $("#time").text(strtime);
+    }, 1000)
+
+    function shuffleArray(pilihan) {
+        let hasil = []
+        while (pilihan.length) {
+            let ridx = Math.floor(Math.random() * pilihan.length),
+                [ritm] = pilihan.splice(ridx, 1);
+            hasil.push(ritm);
+        }
+        return hasil
+    }
+</script>
+</body>
+</html>
